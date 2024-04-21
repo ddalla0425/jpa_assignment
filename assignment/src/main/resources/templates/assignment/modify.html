@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>modify</title>
+    <style>
+        table {
+            margin: auto;
+            border-collapse: collapse
+        }
+        th,td {
+            padding: 5px 10px;
+        }
+        th {
+            width: 100px;
+        }
+        td {
+            width: 280px;
+        }
+        td input[type='text'] {
+            width: 280px;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <a href="/">Home</a>
+    <h1>사원 정보 수정</h1>
+    <form action="/assignment/modify" method="post">
+
+        <table border="1">
+            <tr>
+                <th>사원번호</th>
+                <td><input type="number" name="empId" th:value="${employee.empId}" readonly></td>
+            </tr>
+            <tr>
+                <th>사원명</th>
+                <td><input type="text" name="empName" th:value="${employee.empName}"></td>
+            </tr>
+            <tr>
+                <th>주민번호</th>
+                <td><input type="text" name="empNo" placeholder="ex)990101-1101111 : - 포함해서 입력해주세요."  th:value="${employee.empNo}"></td>
+            </tr>
+            <tr>
+                <th>이메일</th>
+                <td><input type="text" name="email" th:value="${employee.email}"></td>
+            </tr>
+            <tr>
+                <th>전화번호</th>
+                <td><input type="text" name="phone" placeholder="ex)01012345678 : - 없이 숫자만 입력해주세요." th:value="${employee.phone}"></td>
+            </tr>
+            <tr>
+                <th>부서</th>
+                <td>
+                    <select name="deptCode" id="deptCode">
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <th>직급</th>
+                <td>
+                    <select name="jobCode" id="jobCode">
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <th>급여</th>
+                <td>
+                    <input type="hidden" name="salLevel">
+                    <input type="number" name="salary" th:value="${employee.salary}">
+                </td>
+            </tr>
+            <tr>
+                <th>보너스율</th>
+                <td><input type="number" name="bonus" step="0.01" th:value="${employee.bonus}"></td>
+            </tr>
+            <tr>
+                <th>관리자 지정</th>
+                <td>
+                    <select name="managerId" id="managerId">
+                        <option value="">지정안함</option>
+                    </select><br>
+                </td>
+            </tr>
+            <tr>
+                <th>입사일</th>
+                <td>
+                    <input type="date" name="hireDate" th:value="${employee.hireDate}">
+                </td>
+            </tr>
+            <tr id="entDateRow" class="hidden">
+                <th>퇴사일</th>
+                <td>
+                    <input type="date" name="entDate" th:value="${employee.entDate}">
+                </td>
+            </tr>
+            <tr>
+                <th>퇴사 여부</th>
+                <td>
+                    <select name="entYn">
+                        <option value="Y" th:selected="${employee.entYn == 'Y'}">Y</option>
+                        <option value="N" th:selected="${employee.entYn == 'N'}">N</option>
+                    </select>
+                </td>
+            </tr>
+            <td colspan="2">
+                <input type="submit" value="수정">
+            </td>
+            </tr>
+        </table>
+    </form>
+
+    <input type="hidden" name="selectedDeptCode" th:value="${employee.deptCode}">
+    <input type="hidden" name="selectedJobCode" th:value="${employee.jobCode}">
+    <input type="hidden" name="selectedManagerId" th:value="${employee.managerId}">
+
+    <script>
+        const selecteEntYn = document.querySelector("select[name='entYn']");
+        const entDateRow = document.getElementById("entDateRow");
+
+        toggleEntDateVisibility();
+
+        selecteEntYn.addEventListener('change', toggleEntDateVisibility);
+
+        function toggleEntDateVisibility() {
+            if (selecteEntYn.value === 'Y') {
+                entDateRow.classList.remove('hidden');
+            } else {
+                entDateRow.classList.add('hidden');
+            }
+        }
+
+        const selectedDeptCode = document.querySelector("input[name='selectedDeptCode']").value;
+        const selectedJobCode = document.querySelector("input[name='selectedJobCode']").value;
+        const selectedManagerId = document.querySelector("input[name='selectedManagerId']").value;
+        fetch('/assignment/job')
+            .then(res => res.json())
+            .then(data => {
+                const $jobCode = document.getElementById('jobCode');
+                console.log($jobCode)
+                for (let index in data) {
+                    const $option = document.createElement('option');
+                    $option.value = data[index].jobCode;
+                    $option.textContent = data[index].jobName;
+                    $jobCode.appendChild($option);
+                    if(data[index].jobCode === selectedJobCode) {
+                        $option.selected = true;
+                    }
+                }
+            });
+        fetch('/assignment/dept')
+            .then(res => res.json())
+            .then(data => {
+                const $deptCode = document.getElementById('deptCode');
+                console.log($deptCode)
+                for (let index in data) {
+                    const $option = document.createElement('option');
+                    $option.value = data[index].deptId;
+                    $option.textContent = data[index].deptTitle;
+                    $deptCode.appendChild($option);
+                    if(data[index].deptId === selectedDeptCode) {
+                        $option.selected = true;
+                    }
+                }
+            });
+        console.log(selectedManagerId)
+        fetch('/assignment/manager')
+            .then(res => res.json())
+            .then(data => {
+                const $managerId = document.getElementById('managerId');
+
+                for (let index in data) {
+                    const $option = document.createElement('option');
+                    $option.value = data[index].empId;
+                    $option.textContent = data[index].empName;
+                    $managerId.appendChild($option);
+                    // console.log(typeof data[index].empId, data[index].empId)
+                    // console.log(typeof selectedManagerId, selectedManagerId)
+                    if(data[index].empId.toString() === selectedManagerId) {
+                        $option.selected = true;
+                    }
+                }
+            });
+
+        const $submit = document.querySelector("input[type='submit']");
+        const $salary = document.querySelector("input[name='salary']");
+        const $salaryLevel = document.querySelector("input[name='salLevel']");
+        $submit.addEventListener('click', function(){
+            const $salaryVal = $salary.value;
+            if($salaryVal >= 1000000 && $salaryVal < 2000000) {
+                $salaryLevel.value = 'S6';
+            } else if($salaryVal >= 2000000 && $salaryVal < 3000000) {
+                $salaryLevel.value = 'S5';
+            } else if($salaryVal >= 3000000 && $salaryVal < 4000000) {
+                $salaryLevel.value = 'S4';
+            } else if($salaryVal >= 4000000 && $salaryVal < 5000000) {
+                $salaryLevel.value = 'S3';
+            } else if($salaryVal >= 5000000 && $salaryVal < 6000000) {
+                $salaryLevel.value = 'S2';
+            } else if($salaryVal >= 6000000 && $salaryVal < 10000000) {
+                $salaryLevel.value = 'S1';
+            } else {
+
+            }
+        })
+
+    </script>
+</body>
+</html>
